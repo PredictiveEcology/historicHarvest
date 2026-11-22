@@ -1,0 +1,129 @@
+---
+title: "historicHarvest"
+author: "Eliot McIntire"
+date: "Last updated: 2026-11-22"
+output:
+  bookdown::html_document2:
+    toc: true
+    toc_float: true
+    theme: sandstone
+    number_sections: false
+    df_print: paged
+    keep_md: yes
+editor_options:
+  chunk_output_type: console
+---
+
+# historicHarvest
+
+`historicHarvest` replays the harvest that actually happened, year by year, in a LandR
+(`Biomass_core`) simulation that starts in 1985, and replants each cut pixel with the species
+SCANFI shows growing there afterwards. It is for runs that must reproduce the real landscape
+history (for example, attributing fire regime change to climate, harvest and fuel).
+
+The module does three things, and only these:
+
+1. Each year it writes `sim$rstCurrentHarvest` (1 = cut this year), read from CanLaD.
+2. It writes the two small objects `disturbanceMgmt::processPartialDist()` needs to remove
+   every cohort in those pixels.
+3. It provides `plantHistoricHarvest()`, which replants the cut pixels.
+
+Removal is not done here. `Biomass_genericDisturbance` runs `disturbanceMgmt::processPartialDist()`
+right after this module's `harvest` event, and then runs `plantHistoricHarvest()`.
+
+## Where harvest comes from
+
+CanLaD, Canada Landsat Disturbance including forest insect pest (v1.1, published 2026-05-14;
+Perbet et al.): <https://open.canada.ca/data/en/dataset/902801fd-4d9d-4df4-9e95-319e429545cc>.
+The module reads the annual rasters, one 30 m file per year, 1985 to 2025:
+
+`https://ftp.maps.canada.ca/pub/nrcan_rncan/Forests_Foret/canlad_including_insect_defoliation/v1.1/TS_FinalFilter_20260508/canlad_annual_<year>_v1_1_20260508.tif`
+
+(0 = not disturbed, 1 = wildfire, 2 = harvesting, 3 = other, 4 = water, 5 = defoliation and
+harvesting, 6-8 = defoliation). Only the file of the current year is fetched, with
+`reproducible::prepInputs()` cropped to `rasterToMatch`, and the result is `Cache`d. Parameter
+`harvestClasses` (default `c(2, 5)`: harvest, and defoliation followed by harvest) says which classes are harvest.
+
+CanLaD is 30 m and the simulation's pixels are bigger. A pixel is cut when at least
+`harvestMinFraction` (default 0.5) of its CanLaD pixels are harvest.
+
+## Replanting
+
+`plantHistoricHarvest(sim)` plants, in each pixel cut this year, every species whose SCANFI cover
+in that pixel is above `minCoverThreshold` (default 5, the same as `Biomass_borealDataPrep`) and that
+has `maxB` in the pixel's ecoregion. The SCANFI snapshot is the first of 1985, 1990, ..., 2025 at or
+after the harvest year; harvest after 2020 uses 2025. SCANFI layers come from
+`LandR::prepSpeciesLayers_SCANFI()` with the arguments `Biomass_borealDataPrep` uses
+(`sppEquiv`, `sppEquivCol`, `thresh = 10`), and the cohorts are inserted by
+`LandR::updateCohortDataPostHarvest(trackPlanting = TRUE)`: age 2, `initialB` (10) g/m2, `planted = TRUE`.
+A cut pixel with no species above the threshold is left with no cohorts.
+
+## Using it with `Biomass_genericDisturbance`
+
+`processPartialDist()` takes a raster of where (`partialDistLoc`, 1 = disturbed) and a table of which
+cohorts (`partialDistTable`: `speciesCode`, `distYear`, and the age window `ageMin`, `ageMax`). It removes
+the cohorts in the table whose species and age fit, from the pixels in the raster; `replanting = FALSE`
+turns off its own replanting. The module writes both objects, with every species in `cohortData`, ages 0
+to the integer maximum, and this year as `distYear`, so every cohort in a cut pixel is removed.
+`Biomass_genericDisturbance` finds the arguments `cohortData`, `pixelGroupMap`, `partialDistLoc` and
+`partialDistTable` in the `simList` by name.
+
+In a year without harvest the three objects are `NULL`, and `triggerObj = "rstCurrentHarvest"` skips the
+disturbance. (`processPartialDist()` treats an all-`NA` raster as "every pixel", so it must not run on an
+empty year.)
+
+```r
+Biomass_genericDisturbance = list(
+  disturbances = list(
+    ## 1. remove every cohort in the pixels cut this year
+    list(fn = disturbanceMgmt::processPartialDist,
+         name = "harvestRemove",
+         after = "historicHarvest", afterEvent = "harvest",
+         triggerObj = "rstCurrentHarvest",
+         args = list(replanting = FALSE)),
+    ## 2. replant them from SCANFI; offset 0.2 runs it after the removal (offset 0.1)
+    list(fn = function(sim, ...) sim$.mods$historicHarvest$plantHistoricHarvest(sim, ...),
+         name = "harvestPlant",
+         after = "historicHarvest", afterEvent = "harvest", offset = 0.2,
+         triggerObj = "rstCurrentHarvest")
+  )
+)
+```
+
+The second `fn` is a one-line wrapper because the module's functions exist only once `simInit()` has
+loaded the module; `plantHistoricHarvest()` takes the `simList` (and an optional `speciesLayers`, used by
+the tests), so `Biomass_genericDisturbance` hands it `sim` and keeps what it returns.
+
+The two disturbances must stay together: removal alone leaves pixels pointing at pixel groups that have no
+cohorts, and `plantHistoricHarvest()` is what clears them.
+
+## Fire regeneration does not touch harvested pixels
+
+`Biomass_regeneration` acts only on the pixels of `sim$rstCurrentBurn` greater than 0
+(`FireDisturbance()`, `which(as.vector(sim$rstCurrentBurn[]) > 0)`). This module does not write
+`rstCurrentBurn`, so harvested pixels get no fire regeneration unless they also burned. The test
+`the module does not touch rstCurrentBurn` checks that this module's metadata has no `rstCurrentBurn`.
+
+## Timing
+
+The `harvest` event runs every year from `start(sim)` at priority 2: before `Biomass_regeneration`'s
+`fireDisturbance` (3), the fire modules (5.13) and growth, so a year's harvest is in place before that
+year's fire. CanLaD dates an autumn disturbance to the next year (CanLaD readme, limitation 7); the module
+uses CanLaD's years as given.
+
+## Parameters
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `canladUrl` | CanLaD v1.1 folder | Folder of the annual rasters; `NA` uses files already in `inputPath(sim)` |
+| `canladFile` | `canlad_annual_%d_v1_1_20260508.tif` | File name, `%d` = year |
+| `harvestClasses` | `c(2, 5)` | CanLaD classes treated as harvest: 2 harvest, 5 defoliation followed by harvest (salvage) |
+| `harvestMinFraction` | `0.5` | Fraction of 30 m pixels that makes a simulation pixel cut |
+| `minCoverThreshold` | `5` | SCANFI cover (%) a species must exceed to be planted |
+| `sppEquivCol` | `"LandR"` | Species naming column of `sppEquiv`; must match `Biomass_borealDataPrep` |
+| `initialB` | `10` | Biomass of a planted cohort |
+
+## Inputs and outputs
+
+Inputs (from the LandR modules): `rasterToMatch`, `sppEquiv`, `cohortData`, `pixelGroupMap`,
+`ecoregionMap`, `speciesEcoregion`. Outputs: `rstCurrentHarvest`, `partialDistLoc`, `partialDistTable`.
