@@ -62,7 +62,7 @@ toySpeciesLayers <- function(overrides = list()) {
 
 ## One year's CanLaD raster (30 m) in `dir`, with `cells` = list(cellNumber = list(class, fraction))
 ## of the toy 240 m pixels: that fraction of the pixel's 30 m pixels (whole rows) gets `class`.
-toyCanLaD <- function(dir, year, cells, file = "canlad_annual_%d_v1_1_20260508.tif") {
+toyCanLaD <- function(dir, year, cells, file = toyDefault("canladFile")) {
   rtm <- toyRTM()
   fine <- terra::rast(nrows = 80, ncols = 80, xmin = 0, xmax = 2400, ymin = 0, ymax = 2400,
                       crs = "EPSG:3978", vals = 0L)
@@ -76,6 +76,20 @@ toyCanLaD <- function(dir, year, cells, file = "canlad_annual_%d_v1_1_20260508.t
   dir.create(dir, showWarnings = FALSE, recursive = TRUE)
   terra::writeRaster(fine, file.path(dir, sprintf(file, year)), overwrite = TRUE, datatype = "INT1U")
   invisible(dir)
+}
+
+## The module's own parameter defaults, so the tests do not restate them
+toyDefault <- function(param) {
+  md <- SpaDES.core::moduleMetadata(module = "historicHarvest", path = dirname(toyModuleRoot()))
+  md$parameters$default[[match(param, md$parameters$paramName)]]
+}
+
+## getCanLaDHarvest() with the module's defaults, from files in `dir`
+toyGetHarvest <- function(year, dir, ...) {
+  args <- list(year = year, rasterToMatch = toyRTM(), url = NULL, file = toyDefault("canladFile"),
+               destinationPath = dir, harvestClasses = toyDefault("harvestClasses"),
+               minFraction = toyDefault("harvestMinFraction"))
+  do.call(getCanLaDHarvest, utils::modifyList(args, list(...)))
 }
 
 toyModuleRoot <- function() normalizePath(testthat::test_path("..", ".."), winslash = "/")

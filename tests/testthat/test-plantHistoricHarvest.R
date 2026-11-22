@@ -66,7 +66,7 @@ test_that("with Biomass_genericDisturbance's removal step first, a cut pixel hol
   dir <- file.path(tempdir(), "canlad4")
   toyCanLaD(dir, 2001, list("12" = list(2, 1), "18" = list(2, 1)))
   sim <- toySimInit(2001, params = list(canladUrl = NA_character_))
-  file.copy(file.path(dir, "canlad_annual_2001_v1_1_20260508.tif"), SpaDES.core::inputPath(sim), overwrite = TRUE)
+  file.copy(file.path(dir, sprintf(toyDefault("canladFile"), 2001)), SpaDES.core::inputPath(sim), overwrite = TRUE)
   sim <- suppressMessages(SpaDES.core::spades(sim))
   expect_identical(which(as.vector(terra::values(sim$rstCurrentHarvest)) == 1), c(12L, 18L))
   ## the removal call as in the module's Rmd, with the arguments Biomass_genericDisturbance finds by name

@@ -11,18 +11,17 @@ canladYears <- 1985L:2025L
 #'
 #' @param year Integer. The year (1985 to 2025 for CanLaD v1.1).
 #' @param rasterToMatch `SpatRaster`. The grid and mask to return.
-#' @param url Folder holding the annual rasters, or `NULL` to use a file already in
+#' @param url Folder holding the annual rasters (`canladUrl`), or `NULL` to use a file already in
 #'   `destinationPath`.
-#' @param file File name of one year's raster, with `%d` where the year goes.
+#' @param file File name (`canladFile`) of one year's raster, with `%d` where the year goes.
 #' @param destinationPath Where the raster is (or is downloaded to).
-#' @param harvestClasses Integer. CanLaD classes that count as harvest.
-#' @param minFraction Numeric 0-1. See above.
+#' @param harvestClasses Integer (`harvestClasses`). CanLaD classes that count as harvest.
+#' @param minFraction Numeric 0-1 (`harvestMinFraction`). See above.
 #'
 #' @return A `SpatRaster` on `rasterToMatch`: 1 cut, 0 not cut, `NA` where `rasterToMatch` is `NA`.
 #'
 #' @export
-getCanLaDHarvest <- function(year, rasterToMatch, url = NULL, file = "canlad_annual_%d_v1_1_20260508.tif",
-                             destinationPath, harvestClasses = 2L, minFraction = 0.5) {
+getCanLaDHarvest <- function(year, rasterToMatch, url, file, destinationPath, harvestClasses, minFraction) {
   file <- sprintf(file, as.integer(year))
   canlad <- reproducible::prepInputs(
     targetFile = file, url = if (is.null(url)) NULL else paste(url, file, sep = "/"),
