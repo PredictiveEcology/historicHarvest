@@ -15,7 +15,6 @@ test_that("planting table: species above the cover threshold, with maxB in the p
   expect_identical(tab$pixelIndex, c(12L, 12L, 18L))
   expect_identical(as.character(tab$ecoregionGroup), c("1_11", "1_11", "1_12"))
   expect_identical(levels(tab$speciesCode), toySpp)
-  expect_true(all(tab$B == 0L))
   ## cover equal to the threshold is not above it
   tab2 <- historicHarvestPlantingTable(12L, toySpeciesLayers(list("12" = c(5, 5, 5))), toyEcoregionMap(),
                                        toySpeciesEcoregion(), 2001, 5, toySpp)

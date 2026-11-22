@@ -1,6 +1,3 @@
-## SCANFI V2 snapshots; the same set `LandR::prepSpeciesLayers_SCANFI()` accepts as `dataYear`.
-scanfiSnapshotYears <- seq(1985L, 2025L, by = 5L)
-
 #' The SCANFI snapshot to replant a cut from
 #'
 #' The first 5-year SCANFI snapshot at or after the harvest year; harvest after the last
@@ -11,9 +8,10 @@ scanfiSnapshotYears <- seq(1985L, 2025L, by = 5L)
 #' @return Integer, one of 1985, 1990, ..., 2025.
 #' @export
 scanfiSnapshotYear <- function(year) {
+  snapshots <- LandR::scanfiYears("V2")
   vapply(year, function(y) {
-    later <- scanfiSnapshotYears[scanfiSnapshotYears >= y]
-    if (length(later)) later[[1]] else max(scanfiSnapshotYears)
+    later <- snapshots[snapshots >= y]
+    if (length(later)) later[[1]] else max(snapshots)
   }, integer(1))
 }
 
@@ -31,8 +29,8 @@ scanfiSnapshotYear <- function(year) {
 #' @param minCoverThreshold Numeric. Percent cover a species must exceed.
 #' @param speciesCodeLevels Character. Levels for the `speciesCode` factor (those of `cohortData`).
 #'
-#' @return A `data.table` with `pixelIndex`, `speciesCode`, `ecoregionGroup` and `B` (0, as
-#'   `LandR::updateCohortDataPostHarvest()` requires); no rows if nothing is to be planted.
+#' @return A `data.table` with `pixelIndex`, `speciesCode` and `ecoregionGroup`; no rows if nothing is
+#'   to be planted.
 #'
 #' @export
 historicHarvestPlantingTable <- function(cutPixels, speciesLayers, ecoregionMap, speciesEcoregion,
@@ -45,7 +43,7 @@ historicHarvestPlantingTable <- function(cutPixels, speciesLayers, ecoregionMap,
     speciesCode = factor(speciesCode, levels = speciesCodeLevels),
     ecoregionGroup = pemisc::factorValues2(ecoregionMap, as.vector(terra::values(ecoregionMap))[pixelIndex],
                                            att = "ecoregionGroup"),
-    cover = NULL, B = 0L
+    cover = NULL
   )]
   hasTraits <- LandR::speciesEcoregionLatestYear(speciesEcoregion, currentTime)[maxB > 0]
   planting[hasTraits, on = c("speciesCode", "ecoregionGroup"), nomatch = NULL]
