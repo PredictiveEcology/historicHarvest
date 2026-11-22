@@ -6,7 +6,8 @@ test_that("a pixel is cut when at least minFraction of its CanLaD pixels are har
   cut <- toyGetHarvest(2001, dir)
   expect_s4_class(cut, "SpatRaster")
   expect_true(terra::compareGeom(cut, toyRTM(), stopOnError = FALSE))
-  expect_identical(which(as.vector(terra::values(cut)) == 1), c(12L, 14L))
+  ## default classes 2 and 5: the class-5 (salvage) cell 16 is cut too; fire (15) is not
+  expect_identical(which(as.vector(terra::values(cut)) == 1), c(12L, 14L, 16L))
   expect_true(is.na(cut[100][[1]]))
 })
 

@@ -42,7 +42,7 @@ The module reads the annual rasters, one 30 m file per year, 1985 to 2025:
 (0 = not disturbed, 1 = wildfire, 2 = harvesting, 3 = other, 4 = water, 5 = defoliation and
 harvesting, 6-8 = defoliation). Only the file of the current year is fetched, with
 `reproducible::prepInputs()` cropped to `rasterToMatch`, and the result is `Cache`d. Parameter
-`harvestClasses` (default `2`) says which classes are harvest.
+`harvestClasses` (default `c(2, 5)`: harvest, and defoliation followed by harvest) says which classes are harvest.
 
 CanLaD is 30 m and the simulation's pixels are bigger. A pixel is cut when at least
 `harvestMinFraction` (default 0.5) of its CanLaD pixels are harvest.
@@ -117,7 +117,7 @@ uses CanLaD's years as given.
 |---|---|---|
 | `canladUrl` | CanLaD v1.1 folder | Folder of the annual rasters; `NA` uses files already in `inputPath(sim)` |
 | `canladFile` | `canlad_annual_%d_v1_1_20260508.tif` | File name, `%d` = year |
-| `harvestClasses` | `2` | CanLaD classes treated as harvest (add `5` for defoliation followed by harvest) |
+| `harvestClasses` | `c(2, 5)` | CanLaD classes treated as harvest: 2 harvest, 5 defoliation followed by harvest (salvage) |
 | `harvestMinFraction` | `0.5` | Fraction of 30 m pixels that makes a simulation pixel cut |
 | `minCoverThreshold` | `5` | SCANFI cover (%) a species must exceed to be planted |
 | `sppEquivCol` | `"LandR"` | Species naming column of `sppEquiv`; must match `Biomass_borealDataPrep` |
