@@ -29,7 +29,7 @@ defineModule(sim, list(
   reqdPkgs = list("PredictiveEcology/SpaDES.core@development (>= 3.2.1.9053)",
                   "data.table", "terra",
                   "PredictiveEcology/reproducible@development",
-                  "PredictiveEcology/LandR@development (>= 1.2.0.9066)",
+                  "PredictiveEcology/LandR@modsForFireSense (>= 1.2.0.9066)",
                   "PredictiveEcology/pemisc@development",
                   ## the removal step the Rmd tells users to pair this module with
                   "camillegiuliano/disturbanceMgmt@main (>= 0.0.1.9001)"),
