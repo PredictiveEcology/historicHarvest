@@ -57,6 +57,9 @@ defineModule(sim, list(
                     "The column in `sim$sppEquiv` that names species; as in `Biomass_borealDataPrep`."),
     defineParameter("initialB", "numeric", 10, 0, NA,
                     "Biomass (g/m2) of a newly planted cohort. LandR's default is 10."),
+    defineParameter(".runInitialTime", "numeric", start(sim), NA, NA,
+                    paste("Time of the first `harvest` event. Default: `start(sim)`. A run whose start-year vegetation",
+                          "already shows that year's cuts (SCANFI) sets the year after.")),
     defineParameter(".studyAreaName", "character", NA, NA, NA,
                     "Used in the names of the cached SCANFI files."),
     defineParameter(".useCache", "character", ".inputObjects", NA, NA,
@@ -99,7 +102,7 @@ doEvent.historicHarvest <- function(sim, eventTime, eventType) {
       sim <- Init(sim)
       ## Before Biomass_regeneration (3), the fire modules (5.13) and growth, so a year's cut is
       ## in place before that year's fire and growth.
-      sim <- scheduleEvent(sim, start(sim), "historicHarvest", "harvest", eventPriority = 2)
+      sim <- scheduleEvent(sim, P(sim)$.runInitialTime, "historicHarvest", "harvest", eventPriority = 2)
     },
     harvest = {
       sim <- Harvest(sim)

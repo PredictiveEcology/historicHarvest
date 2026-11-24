@@ -44,3 +44,19 @@ test_that("metadata: timeunit year, the CanLaD defaults", {
   expect_true(all(c("canladUrl", "canladFile", "harvestClasses", "harvestMinFraction",
                     "minCoverThreshold", "sppEquivCol", "initialB") %in% names(pars)))
 })
+
+test_that(".runInitialTime delays the first harvest event, so the start year is not harvested", {
+  dir <- file.path(tempdir(), "canlad7")
+  toyCanLaD(dir, 2004, list("12" = list(2, 1)))
+  withr::local_options(list(spades.moduleCodeChecks = FALSE, spades.useRequire = FALSE,
+                            reproducible.verbose = -2, reproducible.useCloud = FALSE))
+  sim <- suppressMessages(SpaDES.core::simInit(
+    times = list(start = 2003, end = 2004), modules = "historicHarvest", objects = toyObjects(),
+    params = list(historicHarvest = list(.useCache = FALSE, canladUrl = NA_character_, .runInitialTime = 2004)),
+    paths = toyPaths()))
+  file.copy(file.path(dir, sprintf(toyDefault("canladFile"), 2004)), SpaDES.core::inputPath(sim), overwrite = TRUE)
+  sim <- suppressMessages(SpaDES.core::spades(sim))
+  done <- SpaDES.core::completed(sim)
+  expect_identical(as.numeric(done[eventType == "harvest", eventTime]), 2004)
+  expect_identical(which(as.vector(terra::values(sim$rstCurrentHarvest)) == 1), 12L)
+})
