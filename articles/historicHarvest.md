@@ -1,7 +1,7 @@
 ---
 title: "historicHarvest"
 author: "Eliot McIntire"
-date: "Last updated: 2026-11-22"
+date: "Last updated: 2026-11-24"
 output:
   bookdown::html_document2:
     toc: true
@@ -108,7 +108,7 @@ cohorts, and `plantHistoricHarvest()` is what clears them.
 
 ## Timing
 
-The `harvest` event runs every year from `start(sim)` at priority 2: before `Biomass_regeneration`'s
+The `harvest` event runs every year from `.runInitialTime` (default `start(sim)`) at priority 2: before `Biomass_regeneration`'s
 `fireDisturbance` (3), the fire modules (5.13) and growth, so a year's harvest is in place before that
 year's fire. CanLaD dates an autumn disturbance to the next year (CanLaD readme, limitation 7); the module
 uses CanLaD's years as given.
@@ -121,6 +121,7 @@ uses CanLaD's years as given.
 | `canladFile` | `canlad_annual_%d_v1_1_20260508.tif` | File name, `%d` = year |
 | `harvestClasses` | `c(2, 5)` | CanLaD classes treated as harvest: 2 harvest, 5 defoliation followed by harvest (salvage) |
 | `harvestMinFraction` | `0.5` | Fraction of 30 m pixels that makes a simulation pixel cut |
+| `.runInitialTime` | `start(sim)` | Time of the first `harvest` event (e.g. 1986 in a run that starts at SCANFI 1985, which already shows 1985's cuts) |
 | `minCoverThreshold` | `5` | SCANFI cover (%) a species must exceed to be planted |
 | `sppEquivCol` | `"LandR"` | Species naming column of `sppEquiv`; must match `Biomass_borealDataPrep` |
 | `initialB` | `10` | Biomass of a planted cohort |

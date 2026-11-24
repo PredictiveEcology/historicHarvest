@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">historicHarvest</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9000</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9001</span>
       </span>
     </div>
 
@@ -63,7 +63,7 @@
       <h1 data-toc-skip>historicHarvest</h1>
                         <h4 data-toc-skip class="author">Eliot McIntire</h4>
             
-            <h4 data-toc-skip class="date">Last updated: 2026-11-22</h4>
+            <h4 data-toc-skip class="date">Last updated: 2026-11-24</h4>
       
 
       <div class="hidden name"><code>historicHarvest.Rmd</code></div>
@@ -160,7 +160,7 @@ cohorts, and <code><a href="../reference/plantHistoricHarvest.html">plantHistori
 <div class="section level3">
 <h3 id="timing">Timing<a class="anchor" aria-label="anchor" href="#timing"></a>
 </h3>
-<p>The <code>harvest</code> event runs every year from <code>start(sim)</code> at priority 2: before <code>Biomass_regeneration</code>’s
+<p>The <code>harvest</code> event runs every year from <code>.runInitialTime</code> (default <code>start(sim)</code>) at priority 2: before <code>Biomass_regeneration</code>’s
 <code>fireDisturbance</code> (3), the fire modules (5.13) and growth, so a year’s harvest is in place before that
 year’s fire. CanLaD dates an autumn disturbance to the next year (CanLaD readme, limitation 7); the module
 uses CanLaD’s years as given.</p>
@@ -202,17 +202,22 @@ uses CanLaD’s years as given.</p>
 <td>Fraction of 30 m pixels that makes a simulation pixel cut</td>
 </tr>
 <tr class="odd">
+<td><code>.runInitialTime</code></td>
+<td><code>start(sim)</code></td>
+<td>Time of the first <code>harvest</code> event (e.g. 1986 in a run that starts at SCANFI 1985, which already shows 1985’s cuts)</td>
+</tr>
+<tr class="even">
 <td><code>minCoverThreshold</code></td>
 <td><code>5</code></td>
 <td>SCANFI cover (%) a species must exceed to be planted</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td><code>sppEquivCol</code></td>
 <td><code>"LandR"</code></td>
 <td>Species naming column of <code>sppEquiv</code>; must match <code>Biomass_borealDataPrep</code>
 </td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td><code>initialB</code></td>
 <td><code>10</code></td>
 <td>Biomass of a planted cohort</td>
