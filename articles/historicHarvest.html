@@ -31,7 +31,7 @@
       </button>
       <span class="navbar-brand">
         <a class="navbar-link" href="../index.html">historicHarvest</a>
-        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9001</span>
+        <span class="version label label-default" data-toggle="tooltip" data-placement="bottom" title="">0.0.0.9002</span>
       </span>
     </div>
 
@@ -84,10 +84,12 @@ history (for example, attributing fire regime change to climate, harvest and fue
 <li>Each year it writes <code>sim$rstCurrentHarvest</code> (1 = cut this year), read from CanLaD.</li>
 <li>It writes the two small objects <code><a href="https://rdrr.io/pkg/disturbanceMgmt/man/processPartialDist.html" class="external-link">disturbanceMgmt::processPartialDist()</a></code> needs to remove
 every cohort in those pixels.</li>
-<li>It provides <code><a href="../reference/plantHistoricHarvest.html">plantHistoricHarvest()</a></code>, which replants the cut pixels.</li>
+<li>It supplies the settings (<code>minCoverThreshold</code>, <code>sppEquivCol</code>, <code>initialB</code>) that <code><a href="https://rdrr.io/pkg/timberSupply/man/plantHistoricHarvest.html" class="external-link">timberSupply::plantHistoricHarvest()</a></code>
+uses to replant the cut pixels. That function lives in the <code>timberSupply</code> package, so a disturbance
+specification can name it as a string.</li>
 </ol>
 <p>Removal is not done here. <code>Biomass_genericDisturbance</code> runs <code><a href="https://rdrr.io/pkg/disturbanceMgmt/man/processPartialDist.html" class="external-link">disturbanceMgmt::processPartialDist()</a></code>
-right after this module’s <code>harvest</code> event, and then runs <code><a href="../reference/plantHistoricHarvest.html">plantHistoricHarvest()</a></code>.</p>
+right after this module’s <code>harvest</code> event, and then runs <code><a href="https://rdrr.io/pkg/timberSupply/man/plantHistoricHarvest.html" class="external-link">timberSupply::plantHistoricHarvest()</a></code>.</p>
 <div class="section level3">
 <h3 id="where-harvest-comes-from">Where harvest comes from<a class="anchor" aria-label="anchor" href="#where-harvest-comes-from"></a>
 </h3>
@@ -105,7 +107,7 @@ harvesting, 6-8 = defoliation). Only the file of the current year is fetched, wi
 <div class="section level3">
 <h3 id="replanting">Replanting<a class="anchor" aria-label="anchor" href="#replanting"></a>
 </h3>
-<p><code>plantHistoricHarvest(sim)</code> plants, in each pixel cut this year, every species whose SCANFI cover
+<p><code>timberSupply::plantHistoricHarvest(sim)</code> plants, in each pixel cut this year, every species whose SCANFI cover
 in that pixel is above <code>minCoverThreshold</code> (default 5, the same as <code>Biomass_borealDataPrep</code>) and that
 has <code>maxB</code> in the pixel’s ecoregion. The SCANFI snapshot is the first of 1985, 1990, …, 2025 at or
 after the harvest year; harvest after 2020 uses 2025. SCANFI layers come from
@@ -137,17 +139,19 @@ empty year.)</p>
 <span>         triggerObj <span class="op">=</span> <span class="st">"rstCurrentHarvest"</span>,</span>
 <span>         args <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>replanting <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>    <span class="co">## 2. replant them from SCANFI; offset 0.2 runs it after the removal (offset 0.1)</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>fn <span class="op">=</span> <span class="kw">function</span><span class="op">(</span><span class="va">sim</span>, <span class="va">...</span><span class="op">)</span> <span class="va">sim</span><span class="op">$</span><span class="va">.mods</span><span class="op">$</span><span class="va">historicHarvest</span><span class="op">$</span><span class="fu">plantHistoricHarvest</span><span class="op">(</span><span class="va">sim</span>, <span class="va">...</span><span class="op">)</span>,</span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>fn <span class="op">=</span> <span class="st">"timberSupply::plantHistoricHarvest"</span>,</span>
 <span>         name <span class="op">=</span> <span class="st">"harvestPlant"</span>,</span>
 <span>         after <span class="op">=</span> <span class="st">"historicHarvest"</span>, afterEvent <span class="op">=</span> <span class="st">"harvest"</span>, offset <span class="op">=</span> <span class="fl">0.2</span>,</span>
 <span>         triggerObj <span class="op">=</span> <span class="st">"rstCurrentHarvest"</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>The second <code>fn</code> is a one-line wrapper because the module’s functions exist only once <code>simInit()</code> has
-loaded the module; <code><a href="../reference/plantHistoricHarvest.html">plantHistoricHarvest()</a></code> takes the <code>simList</code> (and an optional <code>speciesLayers</code>, used by
-the tests), so <code>Biomass_genericDisturbance</code> hands it <code>sim</code> and keeps what it returns.</p>
+<p>The second <code>fn</code> is a string because <code>Biomass_genericDisturbance</code> evaluates it without the <code>simList</code>, so
+it cannot reach this module’s functions; <code><a href="https://rdrr.io/pkg/timberSupply/man/plantHistoricHarvest.html" class="external-link">timberSupply::plantHistoricHarvest()</a></code> is in a package.
+It takes <code>sim</code> first, so <code>Biomass_genericDisturbance</code> hands it <code>sim</code> and keeps what it returns. Its
+<code>minCoverThreshold</code>, <code>sppEquivCol</code>, <code>initialB</code> and <code>studyAreaName</code> arguments default to this module’s
+parameters of the same names (<code>.studyAreaName</code>); put them in the specification’s <code>args</code> to set them there.</p>
 <p>The two disturbances must stay together: removal alone leaves pixels pointing at pixel groups that have no
-cohorts, and <code><a href="../reference/plantHistoricHarvest.html">plantHistoricHarvest()</a></code> is what clears them.</p>
+cohorts, and <code>plantHistoricHarvest()</code> is what clears them.</p>
 </div>
 <div class="section level3">
 <h3 id="fire-regeneration-does-not-touch-harvested-pixels">Fire regeneration does not touch harvested pixels<a class="anchor" aria-label="anchor" href="#fire-regeneration-does-not-touch-harvested-pixels"></a>
