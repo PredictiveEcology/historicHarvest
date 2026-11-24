@@ -57,6 +57,6 @@ test_that(".runInitialTime delays the first harvest event, so the start year is 
   file.copy(file.path(dir, sprintf(toyDefault("canladFile"), 2004)), SpaDES.core::inputPath(sim), overwrite = TRUE)
   sim <- suppressMessages(SpaDES.core::spades(sim))
   done <- SpaDES.core::completed(sim)
-  expect_identical(as.numeric(done[eventType == "harvest", eventTime]), 2004)
+  expect_identical(as.numeric(done$eventTime[done$eventType == "harvest"]), 2004)
   expect_identical(which(as.vector(terra::values(sim$rstCurrentHarvest)) == 1), 12L)
 })

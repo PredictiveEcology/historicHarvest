@@ -26,10 +26,12 @@ The module does three things, and only these:
 1. Each year it writes `sim$rstCurrentHarvest` (1 = cut this year), read from CanLaD.
 2. It writes the two small objects `disturbanceMgmt::processPartialDist()` needs to remove
    every cohort in those pixels.
-3. It provides `plantHistoricHarvest()`, which replants the cut pixels.
+3. It supplies the settings (`minCoverThreshold`, `sppEquivCol`, `initialB`) that `timberSupply::plantHistoricHarvest()`
+   uses to replant the cut pixels. That function lives in the `timberSupply` package, so a disturbance
+   specification can name it as a string.
 
 Removal is not done here. `Biomass_genericDisturbance` runs `disturbanceMgmt::processPartialDist()`
-right after this module's `harvest` event, and then runs `plantHistoricHarvest()`.
+right after this module's `harvest` event, and then runs `timberSupply::plantHistoricHarvest()`.
 
 ## Where harvest comes from
 
@@ -49,7 +51,7 @@ CanLaD is 30 m and the simulation's pixels are bigger. A pixel is cut when at le
 
 ## Replanting
 
-`plantHistoricHarvest(sim)` plants, in each pixel cut this year, every species whose SCANFI cover
+`timberSupply::plantHistoricHarvest(sim)` plants, in each pixel cut this year, every species whose SCANFI cover
 in that pixel is above `minCoverThreshold` (default 5, the same as `Biomass_borealDataPrep`) and that
 has `maxB` in the pixel's ecoregion. The SCANFI snapshot is the first of 1985, 1990, ..., 2025 at or
 after the harvest year; harvest after 2020 uses 2025. SCANFI layers come from
@@ -82,7 +84,7 @@ Biomass_genericDisturbance = list(
          triggerObj = "rstCurrentHarvest",
          args = list(replanting = FALSE)),
     ## 2. replant them from SCANFI; offset 0.2 runs it after the removal (offset 0.1)
-    list(fn = function(sim, ...) sim$.mods$historicHarvest$plantHistoricHarvest(sim, ...),
+    list(fn = "timberSupply::plantHistoricHarvest",
          name = "harvestPlant",
          after = "historicHarvest", afterEvent = "harvest", offset = 0.2,
          triggerObj = "rstCurrentHarvest")
@@ -90,9 +92,11 @@ Biomass_genericDisturbance = list(
 )
 ```
 
-The second `fn` is a one-line wrapper because the module's functions exist only once `simInit()` has
-loaded the module; `plantHistoricHarvest()` takes the `simList` (and an optional `speciesLayers`, used by
-the tests), so `Biomass_genericDisturbance` hands it `sim` and keeps what it returns.
+The second `fn` is a string because `Biomass_genericDisturbance` evaluates it without the `simList`, so
+it cannot reach this module's functions; `timberSupply::plantHistoricHarvest()` is in a package.
+It takes `sim` first, so `Biomass_genericDisturbance` hands it `sim` and keeps what it returns. Its
+`minCoverThreshold`, `sppEquivCol`, `initialB` and `studyAreaName` arguments default to this module's
+parameters of the same names (`.studyAreaName`); put them in the specification's `args` to set them there.
 
 The two disturbances must stay together: removal alone leaves pixels pointing at pixel groups that have no
 cohorts, and `plantHistoricHarvest()` is what clears them.
