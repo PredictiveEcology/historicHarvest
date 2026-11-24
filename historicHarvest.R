@@ -12,7 +12,7 @@ defineModule(sim, list(
     "harvest class, 1985 onwards) in a LandR (Biomass_core) simulation, and replants each cut",
     "pixel with the species SCANFI shows growing there at the next 5-year snapshot.",
     "The module only says where harvest happened each year (`rstCurrentHarvest`) and provides",
-    "`plantHistoricHarvest()`; the removal of cohorts is done by `Biomass_genericDisturbance`",
+    "the settings for `timberSupply::plantHistoricHarvest()`; the removal of cohorts is done by `Biomass_genericDisturbance`",
     "calling `disturbanceMgmt::processPartialDist()`."
   ),
   keywords = c("harvest", "CanLaD", "SCANFI", "LandR", "disturbance"),
@@ -29,8 +29,8 @@ defineModule(sim, list(
   reqdPkgs = list("PredictiveEcology/SpaDES.core@development (>= 3.2.1.9053)",
                   "data.table", "terra",
                   "PredictiveEcology/reproducible@development",
-                  "PredictiveEcology/LandR@modsForFireSense (>= 1.2.0.9066)",
-                  "PredictiveEcology/pemisc@development",
+                  ## replants the cut pixels; named as a string in the disturbance specification
+                  "PredictiveEcology/timberSupply@development (>= 0.0.0.9005)",
                   ## the removal step the Rmd tells users to pair this module with
                   "camillegiuliano/disturbanceMgmt@main (>= 0.0.1.9001)"),
   parameters = bindrows(
